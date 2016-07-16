@@ -5,6 +5,9 @@
 #define BACKLIGHT 28836
 
 /* LCD pins */
+#define PIN_CONTRAST  6
+#define PIN_BACKLIGHT 9
+
 #define PIN_RW 8
 #define PIN_EN 7
 #define PIN_D4 5
@@ -72,8 +75,8 @@ void serialEvent() {
 
 void setup() {
   // Setup contrast and backlight
-  analogWrite(6, CONTRAST); 	// Contrast
-  analogWrite(9, BACKLIGHT);	// Backlight
+  analogWrite(PIN_CONTRAST, CONTRAST);
+  analogWrite(PIN_BACKLIGHT, BACKLIGHT);
   
   // Setup LCD
   lcd.begin(20, 4);
