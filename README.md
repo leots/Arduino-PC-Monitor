@@ -31,7 +31,7 @@ Keep in mind this only works on Windows.
 
 Done :)
 
-#### Making everything run on startup
+### Making everything run on startup
 Set these options in Open Hardware Monitor:
 
 ![screenshot](images/ohm_options.png?raw=true)
@@ -44,7 +44,7 @@ Setup a task in Task Scheduler to start the Python script silently:
 * Set the task to run at **log on of any user** and on **workstation unlock**
 * Finally, in the Settings tab of the task, select to **Stop the existing instance** if the task is already running
 
-#### Python packages
+### Python packages
 
 | Package/module 								| How to install							|
 | --------------------------------------------- | ----------------------------------------- |
