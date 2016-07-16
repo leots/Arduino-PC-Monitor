@@ -20,15 +20,15 @@ You only have to connect a **20x4 character LCD** to your Arduino and then conne
 
 The LCD has to be compatible with the [LiquidCrystal](https://www.arduino.cc/en/Reference/LiquidCrystal) library. If you have a smaller one like 16x2 you can edit the program to make it display less information.
 
-I used an Arduino clone called "Pro Micro" because of its small size, it has an ATmega32u4 microcontroller like the [Arduino Leonardo](https://www.arduino.cc/en/Main/ArduinoBoardLeonardo) but the code should also work with Arduino UNO and similar.
+I used an Arduino clone called "Pro Micro" because of its small size. It has an ATmega32u4 microcontroller like the [Arduino Leonardo](https://www.arduino.cc/en/Main/ArduinoBoardLeonardo) but the code should also work with Arduino UNO and similar.
 
 ### Software setup
 Keep in mind this only works on Windows.
 
 1. Install [Open Hardware Monitor v0.6.0](http://openhardwaremonitor.org/news/release-version-0-6-0-beta/)
-2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5) and these [packages](#Python-packages)
+2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5) and these [packages](#python-packages)
 3. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
-4. [Make everything run on startup](#Making-everything-run-on-startup)
+4. [Make everything run on startup](#making-everything-run-on-startup)
 
 Done :)
 
