@@ -14,15 +14,14 @@ The Python script uses Open Hardware Monitor's [WMI provider](http://openhardwar
 
 Then the Arduino displays this information on its LCD display. Since it's powered by USB, the display turns on or off with your PC.
 
-## Instructions
-### Hardware setup
+## Hardware setup
 You only have to connect a **20x4 character LCD** to your Arduino and then connect it to your computer via USB. Note that since I didn't have a potentiometer, I connected my LCD's backlight (Bklt+) and contrast (Vo) pins to the Arduino's PWM outputs 9 and 6 respectively.
 
 The LCD has to be compatible with the [LiquidCrystal](https://www.arduino.cc/en/Reference/LiquidCrystal) library. If you have a smaller one like 16x2 you can edit the program to make it display less information.
 
 I used an Arduino clone called "Pro Micro" because of its small size. It has an ATmega32u4 microcontroller like the [Arduino Leonardo](https://www.arduino.cc/en/Main/ArduinoBoardLeonardo) but the code should also work with Arduino UNO and similar.
 
-### Software setup
+## Software setup
 Keep in mind this only works on Windows.
 
 1. Install [Open Hardware Monitor v0.6.0](http://openhardwaremonitor.org/news/release-version-0-6-0-beta/)
