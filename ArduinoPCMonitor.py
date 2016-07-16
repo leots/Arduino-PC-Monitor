@@ -45,7 +45,7 @@ def getHardwareInfo(w):
 		elif sensor.name == 'GPU Core':						# Check what type of GPU sensor this is
 			if sensor.SensorType == 'Voltage':				# GPU voltage
 				gpu_info['voltage'] = sensor.value
-			elif sensor.SensorType == 'Temperature':			# GPU temperature
+			elif sensor.SensorType == 'Temperature':				# GPU temperature
 				gpu_info['temp'] = sensor.Value
 			elif sensor.SensorType == 'Load':				# GPU load
 				gpu_info['load'] = sensor.Value
