@@ -42,21 +42,21 @@ def getHardwareInfo(w):
 			value = sensor.Value
 
 			cpu_core_temps[key] = value
-		elif sensor.name == 'GPU Core':										# Check what type of GPU sensor this is
-			if sensor.SensorType == 'Voltage':								# GPU voltage
+		elif sensor.name == 'GPU Core':						# Check what type of GPU sensor this is
+			if sensor.SensorType == 'Voltage':				# GPU voltage
 				gpu_info['voltage'] = sensor.value
-			elif sensor.SensorType == 'Temperature':						# GPU temperature
+			elif sensor.SensorType == 'Temperature':			# GPU temperature
 				gpu_info['temp'] = sensor.Value
-			elif sensor.SensorType == 'Load':								# GPU load
+			elif sensor.SensorType == 'Load':				# GPU load
 				gpu_info['load'] = sensor.Value
-			elif sensor.SensorType == 'Clock':								# GPU clock
+			elif sensor.SensorType == 'Clock':				# GPU clock
 				gpu_info['core_clock'] = sensor.Value
 		elif sensor.Name == 'GPU Memory' and sensor.SensorType == 'Clock':	# GPU memory clock
 			gpu_info['mem_clock'] = sensor.value
-		elif sensor.Name == 'GPU Fan':										# For GPU fan, check if it's RPM or percentage
-			if sensor.SensorType == 'Fan':									# GPU fan RPM
+		elif sensor.Name == 'GPU Fan':						# For GPU fan, check if it's RPM or percentage
+			if sensor.SensorType == 'Fan':					# GPU fan RPM
 				gpu_info['fan_rpm'] = sensor.value
-			elif sensor.SensorType == 'Control':							# GPU fan percentage
+			elif sensor.SensorType == 'Control':				# GPU fan percentage
 				gpu_info['fan_percent'] = sensor.value
 		elif sensor.Name == 'CPU Total' and sensor.SensorType == 'Load':	# Total CPU load
 			myInfo['cpu_load'] = sensor.value
