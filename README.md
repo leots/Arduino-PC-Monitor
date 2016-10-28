@@ -5,7 +5,7 @@ An Arduino program and Python script that work together to give you realtime inf
 
 ## How does it work?
 
-The Python script uses Open Hardware Monitor's [WMI provider](http://openhardwaremonitor.org/wordpress/wp-content/uploads/2011/04/OpenHardwareMonitor-WMI.pdf) to get the following information and send it to the Arduino via serial:
+The Python script uses Open Hardware Monitor's built-in web server to get the following information and send it to the Arduino via serial:
 
 * CPU load and core temperatures (for 4 cores)
 * GPU load, core temperature and voltage
@@ -24,10 +24,11 @@ I used an Arduino clone called "Pro Micro" because of its small size. It has an 
 ## Software setup
 Keep in mind this only works on Windows.
 
-1. Install [Open Hardware Monitor v0.6.0](http://openhardwaremonitor.org/news/release-version-0-6-0-beta/)
-2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5) and these [packages](#python-packages)
-3. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
-4. [Make everything run on startup](#making-everything-run-on-startup)
+1. Install [Open Hardware Monitor v0.7.1 Beta](http://openhardwaremonitor.org/)
+2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5) and the pyserial package by running `pip install pyserial`
+3. In the Python code [here](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.py#L17-L19), change the CPU and GPU name variables to the ones you have in your system, as they are shown in Open Hardware Monitor. Also change the GPU memory size variable to your GPU's memory size
+4. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
+5. [Make everything run on startup](#making-everything-run-on-startup)
 
 Done :)
 
@@ -36,6 +37,8 @@ Set these options in Open Hardware Monitor:
 
 ![screenshot](images/ohm_options.png?raw=true)
 
+Also check "Run" in the "Remote Web Server" submenu.
+
 Setup a task in Task Scheduler to start the Python script silently:
 
 * Set the task to "Start a program"
@@ -43,12 +46,6 @@ Setup a task in Task Scheduler to start the Python script silently:
 * Add the path to ArduinoPCMonitor.py as an argument (enclose in quotes if it has any spaces)
 * Set the task to run at **log on of any user** and on **workstation unlock**
 * Finally, in the Settings tab of the task, select to **Stop the existing instance** if the task is already running
-
-### Python packages
-
-| Package/module 								| How to install							|
-| --------------------------------------------- | ----------------------------------------- |
-| pyserial 										| `pip install pyserial`					|
 
 ## Thanks
  - to [Psyrax](https://github.com/psyrax/) for inspiration from his [SerialMonitor](https://github.com/psyrax/SerialMonitor) and [ArduinoSerialMonitor](https://github.com/psyrax/ArduinoSerialMonitor) projects
