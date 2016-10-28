@@ -49,8 +49,6 @@ Setup a task in Task Scheduler to start the Python script silently:
 | Package/module 								| How to install							|
 | --------------------------------------------- | ----------------------------------------- |
 | pyserial 										| `pip install pyserial`					|
-| wmi 											| `pip install wmi`							|
-| pywin32 										| [Download here](https://sourceforge.net/projects/pywin32/) 	|
 
 ## Thanks
  - to [Psyrax](https://github.com/psyrax/) for inspiration from his [SerialMonitor](https://github.com/psyrax/SerialMonitor) and [ArduinoSerialMonitor](https://github.com/psyrax/ArduinoSerialMonitor) projects
