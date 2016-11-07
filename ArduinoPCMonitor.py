@@ -38,10 +38,10 @@ def get_local_json_contents(json_filename):
             try:
                 data = json.load(json_file)
             except ValueError:
-                print('The contents of the "' + json_filename + '" are not valid JSON')
+                print('Contents of "' + json_filename + '" are not valid JSON')
                 raise
     except IOError:
-        print('An error occurred while reading the "' + json_filename + '" file')
+        print('An error occurred while reading "' + json_filename + '"')
         raise
 
     return data
@@ -176,7 +176,8 @@ def main():
     ports = list(serial.tools.list_ports.comports())
 
     # Load config JSON
-    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    cd = os.path.join(os.getcwd(), os.path.dirname(__file__))
+    __location__ = os.path.realpath(cd)
     config = get_local_json_contents(os.path.join(__location__, 'config.json'))
 
     # If there is only 1 serial port (so it is the Arduino) connect to that one
