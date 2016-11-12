@@ -25,10 +25,11 @@ I used an Arduino clone called "Pro Micro" because of its small size. It has an 
 Keep in mind this only works on Windows.
 
 1. Install [Open Hardware Monitor v0.7.1 Beta](http://openhardwaremonitor.org/)
-2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5) and the pyserial package by running `pip install pyserial`
-3. In the Python code [here](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.py#L17-L19), change the CPU and GPU name variables to the ones you have in your system, as they are shown in Open Hardware Monitor. Also change the GPU memory size variable to your GPU's memory size
-4. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
-5. [Make everything run on startup](#making-everything-run-on-startup)
+2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5)
+3. Install pyserial package by running `pip install pyserial`
+4. In [config.json](https://github.com/leots/Arduino-PC-Monitor/blob/master/config.json), change the CPU and GPU names to the ones you have in your system (as they are shown in Open Hardware Monitor) and set the GPU memory size to your GPU's memory size. You can also change the IP and port of Open Hardware Monitor's web server (default is `localhost:8085`)
+5. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
+6. [Make everything run on startup](#making-everything-run-on-startup)
 
 Done :)
 

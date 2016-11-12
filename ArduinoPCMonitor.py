@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import time
 import json
 import serial
@@ -8,15 +9,6 @@ import serial.tools.list_ports
 
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
-
-# OpenHardwareMonitor web server IP and port
-ohw_ip = 'localhost'
-ohw_port = '8085'
-
-# CPU and GPU names as in OpenHardwareMonitor, and GPU memory size in megabytes
-cpu_name = 'Intel Core i7-3770K'
-gpu_name = 'NVIDIA GeForce GTX 1070'
-gpu_mem_size = 8192
 
 
 def space_pad(number, length):
@@ -31,6 +23,28 @@ def space_pad(number, length):
     number_length = len(str(number))
     spaces_to_add = length - number_length
     return (' ' * spaces_to_add) + str(number)
+
+
+def get_local_json_contents(json_filename):
+    """
+    Returns the contents of a (local) JSON file
+
+    :param json_filename: the filename (as a string) of the local JSON file
+    :returns: the data of the JSON file
+    """
+
+    try:
+        with open(json_filename) as json_file:
+            try:
+                data = json.load(json_file)
+            except ValueError:
+                print('Contents of "' + json_filename + '" are not valid JSON')
+                raise
+    except IOError:
+        print('An error occurred while reading "' + json_filename + '"')
+        raise
+
+    return data
 
 
 def get_json_contents(json_url):
@@ -53,7 +67,7 @@ def get_json_contents(json_url):
     else:
         try:
             data = json.loads(response.decode('utf-8'))
-        except ValueError as e:
+        except ValueError:
             print('Invalid JSON contents')
 
     return data
@@ -65,7 +79,7 @@ def find_in_data(ohw_data, name):
 
     :param ohw_data:    OpenHardwareMonitor data object
     :param name:        Name of node to search for
-    :return:            The found node, or -1 if no node was found
+    :returns:           The found node, or -1 if no node was found
     """
     if ohw_data['Text'] == name:
         # The node we are looking for is this one
@@ -86,7 +100,7 @@ def find_in_data(ohw_data, name):
     return -1
 
 
-def get_hardware_info():
+def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     """
     Get hardware info from OpenHardwareMonitor's web server and format it
     """
@@ -161,6 +175,11 @@ def main():
     # Get serial ports
     ports = list(serial.tools.list_ports.comports())
 
+    # Load config JSON
+    cd = os.path.join(os.getcwd(), os.path.dirname(__file__))
+    __location__ = os.path.realpath(cd)
+    config = get_local_json_contents(os.path.join(__location__, 'config.json'))
+
     # If there is only 1 serial port (so it is the Arduino) connect to that one
     if len(ports) == 1:
         # Connect to the port
@@ -170,7 +189,13 @@ def main():
 
         while True:
             # Get current info
-            my_info = get_hardware_info()
+            my_info = get_hardware_info(
+                config["ohw_ip"],
+                config["ohw_port"],
+                config["cpu_name"],
+                config["gpu_name"],
+                config["gpu_mem_size"]
+            )
 
             # Prepare CPU string
             cpu_temps = my_info['cpu_temps']

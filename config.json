@@ -1,0 +1,7 @@
+{
+  "ohw_ip": "localhost",
+  "ohw_port": "8085",
+  "cpu_name": "Intel Core i7-3770K",
+  "gpu_name": "NVIDIA GeForce GTX 1070",
+  "gpu_mem_size": 8192
+}
