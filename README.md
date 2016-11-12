@@ -8,7 +8,7 @@ An Arduino program and Python script that work together to give you realtime inf
 The Python script uses Open Hardware Monitor's built-in web server to get the following information and send it to the Arduino via serial:
 
 * CPU load and core temperatures (for 4 cores)
-* GPU load, core temperature and voltage
+* GPU load, core temperature and used memory
 * GPU fan speed percentage and RPM *(with cool little fan animation!)*
 * GPU core and memory clock
 
