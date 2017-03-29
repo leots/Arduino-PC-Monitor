@@ -15,11 +15,16 @@
 #define PIN_D6 3
 #define PIN_D7 2
 
+/* Time until backlight is turned off if no update is received */
+#define SCREEN_OFF_DELAY  10000
+
 LiquidCrystal lcd(PIN_RW, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
-String inputString = "";        // String for buffering the message
-boolean stringComplete = false; // Indicates if the string is complete
-int curFanChar = 0;             // Current character of fan animation
+String inputString = "";            // String for buffering the message
+boolean stringComplete = false;     // Indicates if the string is complete
+int curFanChar = 0;                 // Current character of fan animation
+unsigned long previousUpdate = 0;   // Long to keep the time since last received message
+boolean screenOn = true;            // Indicates if the backlight is on or not
 
 byte fanChar1[8] = {
   0b00000,
@@ -77,11 +82,11 @@ void setup() {
   // Setup contrast and backlight
   analogWrite(PIN_CONTRAST, CONTRAST);
   analogWrite(PIN_BACKLIGHT, BACKLIGHT);
-  
+
   // Setup LCD
   lcd.begin(20, 4);
   printInitialLCDStuff();
-  
+
   // Setup serial
   Serial.begin(9600);
   inputString.reserve(200);
@@ -95,31 +100,37 @@ void setup() {
 void loop() {
   serialEvent();
   if (stringComplete) {
+    if (!screenOn) {
+      // Turn on the backlight since we are updating the screen
+      analogWrite(PIN_BACKLIGHT, BACKLIGHT);
+      screenOn = true;
+    }
+
     // CPU
     int cpuStringStart = inputString.indexOf("C");
     int cpuStringLimit = inputString.indexOf("|");
     String cpuString = inputString.substring(cpuStringStart + 1, cpuStringLimit);
     lcd.setCursor(0, 0);
     lcd.print(cpuString);
-    
+
     // GPU 1
     int gpu1StringStart = inputString.indexOf("G", cpuStringLimit);
     int gpu1StringLimit = inputString.indexOf("|", gpu1StringStart);
-    String gpu1String = inputString.substring(gpu1StringStart + 1 ,gpu1StringLimit);
+    String gpu1String = inputString.substring(gpu1StringStart + 1, gpu1StringLimit);
     lcd.setCursor(5, 1);
     lcd.print(gpu1String);
 
     // GPU 2
     int gpu2StringStart = inputString.indexOf("F", gpu1StringLimit);
     int gpu2StringLimit = inputString.indexOf("|", gpu2StringStart);
-    String gpu2String = inputString.substring(gpu2StringStart + 1 ,gpu2StringLimit);
+    String gpu2String = inputString.substring(gpu2StringStart + 1, gpu2StringLimit);
     lcd.setCursor(5, 2);
     lcd.print(gpu2String);
 
     // GPU 3
     int gpu3StringStart = inputString.indexOf("g", gpu2StringLimit);
     int gpu3StringLimit = inputString.indexOf("|", gpu3StringStart);
-    String gpu3String = inputString.substring(gpu3StringStart + 1 ,gpu3StringLimit);
+    String gpu3String = inputString.substring(gpu3StringStart + 1, gpu3StringLimit);
     lcd.setCursor(10, 3);
     lcd.print(gpu3String);
 
@@ -141,8 +152,16 @@ void loop() {
     lcd.write((uint8_t)2);
     lcd.setCursor(19, 0);
     lcd.write((uint8_t)2);
-    
+
     inputString = "";
     stringComplete = false;
+    previousUpdate = millis();
+  } else {
+    // Check if we should turn off the backlight
+    if (millis() > previousUpdate + SCREEN_OFF_DELAY && screenOn) {
+      // Turn off the backlight
+      screenOn = false;
+      analogWrite(PIN_BACKLIGHT, LOW);
+    }
   }
 }
