@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import time
-import json
+from urllib.error import URLError, HTTPError
+from urllib.request import Request, urlopen
+
 import serial
 import serial.tools.list_ports
-
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 
 
 def space_pad(number, length):
@@ -108,7 +108,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     # Init arrays
     my_info = {}
     gpu_info = {}
-    cpu_core_temps = {}
+    cpu_core_temps = []
 
     ohw_json_url = 'http://' + ohw_ip + ':' + ohw_port + '/data.json'
 
@@ -121,14 +121,15 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     cpu_temps = find_in_data(cpu_data, 'Temperatures')
     cpu_load = find_in_data(cpu_data, 'CPU Total')
 
-    # Look for temperature of 4 cores
-    for i in range(0, 4):
-        core_temp = find_in_data(cpu_temps, 'CPU Core #' + str(i + 1))
+    # Look for CPU temperatures. For all children of the CPU temp. section...
+    for core_temp in cpu_temps['Children']:
+        # Check that "Core" is in the name, to prevent using Intel's
+        # "CPU Package" temperature, and should work with AMD too.
+        if 'Core' in core_temp['Text']:
+            # Remove '.0 °C' from end of value
+            temp_value = core_temp['Value'][:-5]
 
-        # Remove '.0 °C' from end of value
-        temp_value = core_temp['Value'][:-5]
-
-        cpu_core_temps[i] = temp_value
+            cpu_core_temps.append(temp_value)
 
     my_info['cpu_temps'] = cpu_core_temps
 
@@ -198,13 +199,13 @@ def main():
             )
 
             # Prepare CPU string
-            cpu_temps = my_info['cpu_temps']
-            cpu = \
-                space_pad(int(my_info['cpu_load']), 3) + '% ' + \
-                space_pad(int(cpu_temps[0]), 2) + 'C ' + \
-                space_pad(int(cpu_temps[1]), 2) + 'C ' + \
-                space_pad(int(cpu_temps[2]), 2) + 'C ' + \
-                space_pad(int(cpu_temps[3]), 2) + 'C'
+            cpu_temps = my_info['cpu_temps']  # [:1]
+            cpu = space_pad(int(my_info['cpu_load']), 3) + '% '
+            for index, temp in enumerate(cpu_temps):
+                if index >= 4:
+                    # Can't fit more than 4 temperatures in Arduino screen
+                    break
+                cpu += space_pad(int(temp), 2) + 'C '
 
             # Prepare GPU strings
             gpu_info = my_info['gpu']
@@ -220,8 +221,10 @@ def main():
                 space_pad(int(gpu_info['mem_clock']), 4)
 
             # Send the strings via serial to the Arduino
-            ser.write(str('C' + cpu + '|G' + gpu1 + '|F' + gpu2 +
-                          '|g' + gpu3 + '|').encode())
+            arduino_str = \
+                'C' + cpu + '|G' + gpu1 + '|F' + gpu2 + '|g' + gpu3 + '|'
+            # print(arduino_str)
+            ser.write(arduino_str.encode())
 
             # Wait until refreshing Arduino again
             time.sleep(2.5)
@@ -229,6 +232,7 @@ def main():
         ser.close()
     else:
         print('Number of ports is not 1, can\'t connect!')
+
 
 if __name__ == '__main__':
     main()
