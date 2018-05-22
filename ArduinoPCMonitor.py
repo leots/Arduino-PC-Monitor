@@ -151,8 +151,12 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     gpu_mem_clock = find_in_data(gpu_clocks, 'GPU Memory')
     gpu_temp = find_in_data(find_in_data(gpu_data, 'Temperatures'), 'GPU Core')
     gpu_core_load = find_in_data(gpu_load, 'GPU Core')
-    fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU')
     fan_percent = find_in_data(find_in_data(gpu_data, 'Controls'), 'GPU Fan')
+
+    # Get GPU Fan RPM info (check both Fans > GPU and Fans > GPU Fan)
+    fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU')
+    if fan_rpm == -1:
+        fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU Fan')
 
     # Check if the GPU has used memory information, and remember it
     if show_gpu_mem is None:
@@ -231,11 +235,16 @@ def main():
             gpu_info = my_info['gpu']
             gpu1 = \
                 space_pad(int(gpu_info['load']), 3) + '% ' + \
-                space_pad(int(gpu_info['temp']), 2) + 'C ' + \
-                space_pad(int(gpu_info['used_mem']), 4) + 'MB'
+                space_pad(int(gpu_info['temp']), 2) + 'C '
+            if 'used_mem' in gpu_info:
+                gpu1 += space_pad(int(gpu_info['used_mem']), 4) + 'MB'
+            else:
+                gpu1 += str(gpu_info['voltage']) + 'V'
+
             gpu2 = \
                 space_pad(int(gpu_info['fan_percent']), 3) + '% F ' + \
                 space_pad(int(gpu_info['fan_rpm']), 4) + ' RPM'
+
             gpu3 = \
                 space_pad(int(gpu_info['core_clock']), 4) + '/' + \
                 space_pad(int(gpu_info['mem_clock']), 4)
