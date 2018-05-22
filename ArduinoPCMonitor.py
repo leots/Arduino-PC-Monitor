@@ -10,6 +10,8 @@ from urllib.request import Request, urlopen
 import serial
 import serial.tools.list_ports
 
+show_gpu_mem = None
+
 
 def space_pad(number, length):
     """
@@ -104,6 +106,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     """
     Get hardware info from OpenHardwareMonitor's web server and format it
     """
+    global show_gpu_mem
 
     # Init arrays
     my_info = {}
@@ -150,19 +153,36 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     gpu_core_load = find_in_data(gpu_load, 'GPU Core')
     fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU')
     fan_percent = find_in_data(find_in_data(gpu_data, 'Controls'), 'GPU Fan')
-    gpu_mem_percent = find_in_data(gpu_load, 'GPU Memory')
 
-    # Calculate how many MB of GPU memory are used based on the percentage
-    used_percentage = float(gpu_mem_percent['Value'][:-2])
-    used_mb = int((gpu_mem_size * used_percentage) / 100)
+    # Check if the GPU has used memory information, and remember it
+    if show_gpu_mem is None:
+        gpu_mem_percent = find_in_data(gpu_load, 'GPU Memory')
+        show_gpu_mem = (gpu_mem_percent != -1)
+        # show_gpu_mem = False
 
-    # Add GPU info to GPU object
+    # Get GPU Memory percentage if it exists, otherwise GPU voltage
+    if show_gpu_mem:
+        # Get GPU memory percentage
+        gpu_mem_percent = find_in_data(gpu_load, 'GPU Memory')
+
+        # Calculate used MBs of GPU memory based on the percentage
+        used_percentage = float(gpu_mem_percent['Value'][:-2])
+        used_mb = int((gpu_mem_size * used_percentage) / 100)
+
+        # Add to GPU info object
+        gpu_info['used_mem'] = used_mb
+    else:
+        # Get GPU voltage
+        voltages = find_in_data(gpu_data, 'Voltages')
+        core_voltage = find_in_data(voltages, 'GPU Core')
+        gpu_info['voltage'] = core_voltage['Value'][:-2]
+
+    # Add rest of GPU info to GPU object
     gpu_info['temp'] = gpu_temp['Value'][:-5]
     gpu_info['load'] = gpu_core_load['Value'][:-4]
     gpu_info['core_clock'] = gpu_core_clock['Value'][:-4]
     # Memory clock divided by 2 so it is the same as GPU-Z reports
     gpu_info['mem_clock'] = int(int(gpu_mem_clock['Value'][:-4]) / 2)
-    gpu_info['used_mem'] = used_mb
     gpu_info['fan_percent'] = fan_percent['Value'][:-4]
     gpu_info['fan_rpm'] = fan_rpm['Value'][:-4]
 
@@ -191,11 +211,11 @@ def main():
         while True:
             # Get current info
             my_info = get_hardware_info(
-                config["ohw_ip"],
-                config["ohw_port"],
-                config["cpu_name"],
-                config["gpu_name"],
-                config["gpu_mem_size"]
+                config['ohw_ip'],
+                config['ohw_port'],
+                config['cpu_name'],
+                config['gpu_name'],
+                config['gpu_mem_size']
             )
 
             # Prepare CPU string
