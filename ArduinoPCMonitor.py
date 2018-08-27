@@ -11,13 +11,14 @@ import serial
 import serial.tools.list_ports
 
 show_gpu_mem = None
+gpu_fan_rpm = None
 
 
 def space_pad(number, length):
     """
     Return a number as a string, padded with spaces to make it the given length
 
-    :param number: the number to pad with spaces
+    :param number: the number to pad with spaces (can be int or float)
     :param length: the specified length
     :returns: the number padded with spaces as a string
     """
@@ -83,6 +84,8 @@ def find_in_data(ohw_data, name):
     :param name:        Name of node to search for
     :returns:           The found node, or -1 if no node was found
     """
+    if ohw_data == -1:
+        raise Exception('Couldn\'t find value ' + name + '!')
     if ohw_data['Text'] == name:
         # The node we are looking for is this one
         return ohw_data
@@ -102,11 +105,26 @@ def find_in_data(ohw_data, name):
     return -1
 
 
+def get_temperature_number(temp_str):
+    """
+    Given a temperature string of the form "48.8 °C", return the first number
+    (in this example, 48). Also handles strings of the form "48,8 Â°C" that
+    apparently can exist (at least when reading the response from a file)
+    :param temp_str:    Temperature string
+    :return:    Temperature number (in string form)
+    """
+    if 'Â' in temp_str:
+        return temp_str[:-6]
+    else:
+        return temp_str[:-5]
+
+
 def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     """
     Get hardware info from OpenHardwareMonitor's web server and format it
     """
     global show_gpu_mem
+    global gpu_fan_rpm
 
     # Init arrays
     my_info = {}
@@ -117,6 +135,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
 
     # Get data from OHW's data json file
     data_json = get_json_contents(ohw_json_url)
+    # data_json = get_local_json_contents("response.json")
 
     # Get info for CPU
     cpu_data = find_in_data(data_json, cpu_name)
@@ -130,9 +149,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
         # "CPU Package" temperature, and should work with AMD too.
         if 'Core' in core_temp['Text']:
             # Remove '.0 °C' from end of value
-            temp_value = core_temp['Value'][:-5]
-
-            cpu_core_temps.append(temp_value)
+            cpu_core_temps.append(get_temperature_number(core_temp['Value']))
 
     my_info['cpu_temps'] = cpu_core_temps
 
@@ -153,16 +170,26 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     gpu_core_load = find_in_data(gpu_load, 'GPU Core')
     fan_percent = find_in_data(find_in_data(gpu_data, 'Controls'), 'GPU Fan')
 
+    # Check if the GPU has fan RPM info or just PWM info (percentage)
+    if gpu_fan_rpm is None:
+        gpu_fans = find_in_data(gpu_data, 'Fans')
+        gpu_fan_rpm = (gpu_fans != -1)
+
+    # Get data for GPU fans (or PWM percentage)
+    if gpu_fan_rpm:
+        gpu_fans = find_in_data(gpu_data, 'Fans')
+    else:
+        gpu_fans = find_in_data(gpu_data, 'Controls')
+
     # Get GPU Fan RPM info (check both Fans > GPU and Fans > GPU Fan)
-    fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU')
+    fan_rpm = find_in_data(gpu_fans, 'GPU')
     if fan_rpm == -1:
-        fan_rpm = find_in_data(find_in_data(gpu_data, 'Fans'), 'GPU Fan')
+        fan_rpm = find_in_data(gpu_fans, 'GPU Fan')
 
     # Check if the GPU has used memory information, and remember it
     if show_gpu_mem is None:
         gpu_mem_percent = find_in_data(gpu_load, 'GPU Memory')
         show_gpu_mem = (gpu_mem_percent != -1)
-        # show_gpu_mem = False
 
     # Get GPU Memory percentage if it exists, otherwise GPU voltage
     if show_gpu_mem:
@@ -170,7 +197,8 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
         gpu_mem_percent = find_in_data(gpu_load, 'GPU Memory')
 
         # Calculate used MBs of GPU memory based on the percentage
-        used_percentage = float(gpu_mem_percent['Value'][:-2])
+        used_percentage = float(
+            gpu_mem_percent['Value'][:-2].replace(",", "."))
         used_mb = int((gpu_mem_size * used_percentage) / 100)
 
         # Add to GPU info object
@@ -182,7 +210,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
         gpu_info['voltage'] = core_voltage['Value'][:-2]
 
     # Add rest of GPU info to GPU object
-    gpu_info['temp'] = gpu_temp['Value'][:-5]
+    gpu_info['temp'] = get_temperature_number(gpu_temp['Value'])
     gpu_info['load'] = gpu_core_load['Value'][:-4]
     gpu_info['core_clock'] = gpu_core_clock['Value'][:-4]
     # Memory clock divided by 2 so it is the same as GPU-Z reports
@@ -198,6 +226,7 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
 
 def main():
     # Get serial ports
+    # todo: set the port via config.json
     ports = list(serial.tools.list_ports.comports())
 
     # Load config JSON
@@ -223,7 +252,7 @@ def main():
             )
 
             # Prepare CPU string
-            cpu_temps = my_info['cpu_temps']  # [:1]
+            cpu_temps = my_info['cpu_temps']
             cpu = space_pad(int(my_info['cpu_load']), 3) + '% '
             for index, temp in enumerate(cpu_temps):
                 if index >= 4:
