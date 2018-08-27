@@ -10,6 +10,7 @@ from urllib.request import Request, urlopen
 import serial
 import serial.tools.list_ports
 
+serial_debug = False
 show_gpu_mem = None
 gpu_fan_rpm = None
 
@@ -125,17 +126,21 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
     """
     global show_gpu_mem
     global gpu_fan_rpm
+    global serial_debug
 
     # Init arrays
     my_info = {}
     gpu_info = {}
     cpu_core_temps = []
 
-    ohw_json_url = 'http://' + ohw_ip + ':' + ohw_port + '/data.json'
-
-    # Get data from OHW's data json file
-    data_json = get_json_contents(ohw_json_url)
-    # data_json = get_local_json_contents("response.json")
+    # Get data
+    if serial_debug:
+        # Read data from response.json file (for debugging)
+        data_json = get_local_json_contents('response.json')
+    else:
+        # Get actual OHW data
+        ohw_json_url = 'http://' + ohw_ip + ':' + ohw_port + '/data.json'
+        data_json = get_json_contents(ohw_json_url)
 
     # Get info for CPU
     cpu_data = find_in_data(data_json, cpu_name)
@@ -225,71 +230,67 @@ def get_hardware_info(ohw_ip, ohw_port, cpu_name, gpu_name, gpu_mem_size):
 
 
 def main():
-    # Get serial ports
-    # todo: set the port via config.json
-    ports = list(serial.tools.list_ports.comports())
+    global serial_debug
 
     # Load config JSON
     cd = os.path.join(os.getcwd(), os.path.dirname(__file__))
     __location__ = os.path.realpath(cd)
     config = get_local_json_contents(os.path.join(__location__, 'config.json'))
 
-    # If there is only 1 serial port (so it is the Arduino) connect to that one
-    if len(ports) == 1:
-        # Connect to the port
-        port = ports[0][0]
-        print('Only 1 port found: ' + port + '. Connecting to it...')
-        ser = serial.Serial(port)
+    # Connect to the specified serial port
+    serial_port = config['serial_port']
+    if serial_port == 'TEST':
+        serial_debug = True
+    else:
+        ser = serial.Serial(serial_port)
 
-        while True:
-            # Get current info
-            my_info = get_hardware_info(
-                config['ohw_ip'],
-                config['ohw_port'],
-                config['cpu_name'],
-                config['gpu_name'],
-                config['gpu_mem_size']
-            )
+    while True:
+        # Get current info
+        my_info = get_hardware_info(
+            config['ohw_ip'],
+            config['ohw_port'],
+            config['cpu_name'],
+            config['gpu_name'],
+            config['gpu_mem_size']
+        )
 
-            # Prepare CPU string
-            cpu_temps = my_info['cpu_temps']
-            cpu = space_pad(int(my_info['cpu_load']), 3) + '% '
-            for index, temp in enumerate(cpu_temps):
-                if index >= 4:
-                    # Can't fit more than 4 temperatures in Arduino screen
-                    break
-                cpu += space_pad(int(temp), 2) + 'C '
+        # Prepare CPU string
+        cpu_temps = my_info['cpu_temps']
+        cpu = space_pad(int(my_info['cpu_load']), 3) + '% '
+        for index, temp in enumerate(cpu_temps):
+            if index >= 4:
+                # Can't fit more than 4 temperatures in Arduino screen
+                break
+            cpu += space_pad(int(temp), 2) + 'C '
 
-            # Prepare GPU strings
-            gpu_info = my_info['gpu']
-            gpu1 = \
-                space_pad(int(gpu_info['load']), 3) + '% ' + \
-                space_pad(int(gpu_info['temp']), 2) + 'C '
-            if 'used_mem' in gpu_info:
-                gpu1 += space_pad(int(gpu_info['used_mem']), 4) + 'MB'
-            else:
-                gpu1 += str(gpu_info['voltage']) + 'V'
+        # Prepare GPU strings
+        gpu_info = my_info['gpu']
+        gpu1 = \
+            space_pad(int(gpu_info['load']), 3) + '% ' + \
+            space_pad(int(gpu_info['temp']), 2) + 'C '
+        if 'used_mem' in gpu_info:
+            gpu1 += space_pad(int(gpu_info['used_mem']), 4) + 'MB'
+        else:
+            gpu1 += str(gpu_info['voltage']) + 'V'
 
-            gpu2 = \
-                space_pad(int(gpu_info['fan_percent']), 3) + '% F ' + \
-                space_pad(int(gpu_info['fan_rpm']), 4) + ' RPM'
+        gpu2 = \
+            space_pad(int(gpu_info['fan_percent']), 3) + '% F ' + \
+            space_pad(int(gpu_info['fan_rpm']), 4) + ' RPM'
 
-            gpu3 = \
-                space_pad(int(gpu_info['core_clock']), 4) + '/' + \
-                space_pad(int(gpu_info['mem_clock']), 4)
+        gpu3 = \
+            space_pad(int(gpu_info['core_clock']), 4) + '/' + \
+            space_pad(int(gpu_info['mem_clock']), 4)
 
-            # Send the strings via serial to the Arduino
-            arduino_str = \
-                'C' + cpu + '|G' + gpu1 + '|F' + gpu2 + '|g' + gpu3 + '|'
-            # print(arduino_str)
+        # Send the strings via serial to the Arduino
+        arduino_str = \
+            'C' + cpu + '|G' + gpu1 + '|F' + gpu2 + '|g' + gpu3 + '|'
+        if serial_debug:
+            print(arduino_str)
+        else:
             ser.write(arduino_str.encode())
 
-            # Wait until refreshing Arduino again
-            time.sleep(2.5)
-
-        ser.close()
-    else:
-        print('Number of ports is not 1, can\'t connect!')
+        # Wait until refreshing Arduino again
+        time.sleep(2.5)
 
 
 if __name__ == '__main__':

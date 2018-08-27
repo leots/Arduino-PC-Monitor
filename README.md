@@ -27,7 +27,7 @@ Keep in mind this only works on Windows.
 1. Install [Open Hardware Monitor v0.7.1 Beta](http://openhardwaremonitor.org/)
 2. Install [Python 3+](https://www.python.org/downloads/) (tested with 3.4 and 3.5)
 3. Install pyserial package by running `pip install pyserial`
-4. In [config.json](https://github.com/leots/Arduino-PC-Monitor/blob/master/config.json), change the CPU and GPU names to the ones you have in your system (as they are shown in Open Hardware Monitor) and set the GPU memory size to your GPU's memory size. You can also change the IP and port of Open Hardware Monitor's web server (default is `localhost:8085`)
+4. In the `config.json` file, change the options to suit your system. Find the serial port your Arduino connects to (via Device Manager), set the CPU and GPU names to the ones appropriate to your system (as they are shown in Open Hardware Monitor) and set the correct GPU memory size for your GPU. You can also change the IP and port of Open Hardware Monitor's web server (default is `localhost:8085`) 
 5. In the Arduino code, setup the LCD [settings](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L3) and [pins](https://github.com/leots/Arduino-PC-Monitor/blob/master/ArduinoPCMonitor.ino#L7) depending on your configuration, then run it!
 6. [Make everything run on startup](#making-everything-run-on-startup)
 
